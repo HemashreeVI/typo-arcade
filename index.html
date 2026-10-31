@@ -1,0 +1,1253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Typo Arcade: a typing test with arcade modes, daily challenges, weak-key practice, a ghost racer, themes, sounds, XP and achievements.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23ffb454'/%3E%3Ctext x='16' y='23' font-size='20' text-anchor='middle' font-family='Arial Black,sans-serif' fill='%231a1833'%3ET%3C/text%3E%3C/svg%3E">
+<title>Typo Arcade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Nunito:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&family=Fira+Code:wght@400;600&family=Space+Mono:wght@400;700&family=IBM+Plex+Mono:wght@400;600&family=Courier+Prime&display=swap" rel="stylesheet">
+<style>
+/* Layout: one centred arcade cabinet column (header, mode rail, play field, footer hints),
+   with a slide-in settings sheet and modal panels. Themes swap the colour tokens only. */
+:root {
+  --bg: #f5f3fb;
+  --surface: #e9e5f5;
+  --surface-2: #ddd7ee;
+  --text: #2a2540;
+  --sub: #a29cbd;
+  --main: #6a4cff;
+  --on-main: #ffffff;
+  --error: #e0245e;
+  --good: #0f9e7b;
+  --caret: #6a4cff;
+  --shadow: 0 10px 30px rgba(42, 37, 64, .12);
+  --font-display: "Bungee", "Arial Black", Impact, sans-serif;
+  --font-body: "Nunito", "Segoe UI", system-ui, sans-serif;
+  --font-type: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --type-size: 1.75rem;
+  --radius: 14px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1a1833; --surface: #24214a; --surface-2: #2f2b5c; --text: #f3eefe; --sub: #6f69a6;
+    --main: #ffb454; --on-main: #1a1833; --error: #ff5d7a; --good: #6ee7c8; --caret: #ffb454;
+    --shadow: 0 10px 30px rgba(0, 0, 0, .35); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #1a1833; --surface: #24214a; --surface-2: #2f2b5c; --text: #f3eefe; --sub: #6f69a6;
+  --main: #ffb454; --on-main: #1a1833; --error: #ff5d7a; --good: #6ee7c8; --caret: #ffb454;
+  --shadow: 0 10px 30px rgba(0, 0, 0, .35); color-scheme: dark;
+}
+/* named themes chosen in settings (declared after, so they win) */
+:root.theme-arcade { --bg:#1a1833; --surface:#24214a; --surface-2:#2f2b5c; --text:#f3eefe; --sub:#6f69a6; --main:#ffb454; --on-main:#1a1833; --error:#ff5d7a; --good:#6ee7c8; --caret:#ffb454; --shadow:0 10px 30px rgba(0,0,0,.35); color-scheme:dark; }
+:root.theme-paper { --bg:#f5f3fb; --surface:#e9e5f5; --surface-2:#ddd7ee; --text:#2a2540; --sub:#a29cbd; --main:#6a4cff; --on-main:#fff; --error:#e0245e; --good:#0f9e7b; --caret:#6a4cff; --shadow:0 10px 30px rgba(42,37,64,.12); color-scheme:light; }
+:root.theme-sakura { --bg:#fff1f4; --surface:#ffe1e8; --surface-2:#ffd0dc; --text:#5a2a3a; --sub:#cf98a9; --main:#e2507a; --on-main:#fff; --error:#a8231b; --good:#2f8f5f; --caret:#e2507a; --shadow:0 10px 30px rgba(90,42,58,.12); color-scheme:light; }
+:root.theme-ocean { --bg:#0d2233; --surface:#13324a; --surface-2:#1a4260; --text:#dff3ff; --sub:#4f7a96; --main:#4fd1e8; --on-main:#0d2233; --error:#ff7a6b; --good:#8ff0a4; --caret:#4fd1e8; --shadow:0 10px 30px rgba(0,0,0,.35); color-scheme:dark; }
+:root.theme-amber { --bg:#17110a; --surface:#241a0e; --surface-2:#332512; --text:#ffcc66; --sub:#7c5c2c; --main:#ffb000; --on-main:#17110a; --error:#ff5533; --good:#ffe9a8; --caret:#ffb000; --shadow:0 10px 30px rgba(0,0,0,.4); color-scheme:dark; }
+:root.theme-mint { --bg:#eefaf4; --surface:#daf2e6; --surface-2:#c6e9d7; --text:#1e3b31; --sub:#8db3a2; --main:#0e9f6e; --on-main:#fff; --error:#d64545; --good:#0b7a55; --caret:#0e9f6e; --shadow:0 10px 30px rgba(30,59,49,.12); color-scheme:light; }
+:root.theme-candy { --bg:#2a1235; --surface:#3a1a49; --surface-2:#4a225c; --text:#ffe6fb; --sub:#9a6aa8; --main:#ff7ad9; --on-main:#2a1235; --error:#ffd166; --good:#7af0ff; --caret:#ff7ad9; --shadow:0 10px 30px rgba(0,0,0,.4); color-scheme:dark; }
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 15px;
+  transition: background .3s, color .3s;
+}
+button, select, input, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--main); outline-offset: 2px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.app {
+  min-height: 100%; display: flex; flex-direction: column; gap: 18px;
+  max-width: 1100px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 18px 12px;
+}
+
+/* ------------------------------------------------------------- header */
+header { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.logo { font-family: var(--font-display); font-size: 1.55rem; letter-spacing: .02em; display: flex; align-items: center; gap: 8px; user-select: none; }
+.logo .key {
+  display: inline-grid; place-items: center; width: 1.6em; height: 1.6em; border-radius: 8px; font-size: .75em;
+  background: var(--main); color: var(--on-main); box-shadow: 0 4px 0 color-mix(in srgb, var(--main) 55%, #000);
+  transform: rotate(-6deg);
+}
+.logo b { color: var(--main); font-weight: 400; }
+nav.modes { display: flex; gap: 4px; background: var(--surface); padding: 4px; border-radius: 999px; flex-wrap: wrap; }
+nav.modes button {
+  border: 0; background: transparent; padding: 7px 14px; border-radius: 999px; cursor: pointer; font-weight: 700; color: var(--sub);
+  transition: background .2s, color .2s;
+}
+nav.modes button:hover { color: var(--text); }
+nav.modes button[aria-pressed="true"] { background: var(--main); color: var(--on-main); }
+.head-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.level { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: .85rem; color: var(--sub); }
+.level .lv { font-family: var(--font-display); color: var(--main); font-size: 1rem; }
+.xpbar { width: 80px; height: 6px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
+.xpbar i { display: block; height: 100%; background: var(--main); width: 0; transition: width .6s; }
+.icon-btn {
+  border: 0; background: var(--surface); width: 38px; height: 38px; border-radius: 10px; cursor: pointer; display: grid; place-items: center;
+  color: var(--sub); transition: color .2s, transform .1s;
+}
+.icon-btn:hover { color: var(--text); }
+.icon-btn:active { transform: scale(.94); }
+.icon-btn svg { width: 20px; height: 20px; }
+
+/* ------------------------------------------------------------- config rail */
+.rail {
+  display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; justify-content: center;
+  background: var(--surface); border-radius: var(--radius); padding: 8px 12px; font-size: .9rem;
+}
+.rail .grp { display: flex; gap: 2px; align-items: center; flex-wrap: wrap; }
+.rail .sep { width: 2px; height: 18px; background: var(--surface-2); border-radius: 2px; }
+.pill {
+  border: 0; background: transparent; color: var(--sub); padding: 5px 9px; border-radius: 8px; cursor: pointer; font-weight: 700;
+  transition: color .15s, background .15s;
+}
+.pill:hover { color: var(--text); }
+.pill[aria-pressed="true"] { color: var(--main); }
+.rail select { background: var(--surface-2); border: 0; border-radius: 8px; padding: 5px 8px; font-weight: 700; color: var(--text); }
+
+/* ------------------------------------------------------------- play field */
+main { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 14px; min-height: 360px; }
+.live { display: flex; align-items: baseline; gap: 22px; min-height: 2.2rem; font-weight: 800; color: var(--main); flex-wrap: wrap; }
+.live .big { font-family: var(--font-display); font-size: 1.9rem; font-weight: 400; }
+.live .stat { font-size: 1rem; color: var(--sub); font-variant-numeric: tabular-nums; }
+.live .stat b { color: var(--text); }
+.combo { margin-left: auto; font-weight: 800; color: var(--sub); display: flex; align-items: center; gap: 6px; transition: transform .15s; }
+.combo.hot { color: var(--main); }
+.combo.bump { transform: scale(1.18); }
+.combo .flame { font-size: 1.2rem; filter: grayscale(1); opacity: .5; transition: filter .3s, opacity .3s; }
+.combo.hot .flame { filter: none; opacity: 1; }
+
+.typebox { position: relative; cursor: text; }
+.words-wrap { overflow: hidden; position: relative; }
+.words {
+  position: relative; display: flex; flex-wrap: wrap; align-content: flex-start;
+  font-family: var(--font-type); font-size: var(--type-size); line-height: 1.5; user-select: none;
+  transition: transform .18s ease-out;
+}
+.word { margin: .1em .32em .1em 0; position: relative; white-space: nowrap; border-bottom: 2px solid transparent; }
+.word.err { border-bottom-color: color-mix(in srgb, var(--error) 70%, transparent); }
+.l { color: var(--sub); transition: color .06s; }
+.l.ok { color: var(--text); }
+.l.bad { color: var(--error); }
+.l.extra { color: color-mix(in srgb, var(--error) 65%, var(--bg)); }
+.blind .l.bad { color: var(--text); }
+.blind .l.extra { color: var(--text); }
+.blind .word.err { border-bottom-color: transparent; }
+.caret, .ghost {
+  position: absolute; left: 0; top: 0; width: 3px; height: 1.2em; border-radius: 2px; background: var(--caret);
+  pointer-events: none; font-size: var(--type-size);
+}
+.caret.smooth { transition: left .09s linear, top .09s linear; }
+.caret.blink { animation: blink 1s infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.caret.block { width: .62em; opacity: .45; }
+.caret.under { height: 3px; width: .62em; }
+.caret.off { display: none; }
+.ghost { background: var(--sub); opacity: .5; transition: left .1s linear, top .1s linear; }
+.focus-hint {
+  position: absolute; inset: 0; display: grid; place-items: center; font-weight: 800; color: var(--text);
+  background: color-mix(in srgb, var(--bg) 70%, transparent); backdrop-filter: blur(4px); border-radius: var(--radius);
+  font-size: 1.05rem; cursor: pointer;
+}
+.under-row { display: flex; justify-content: center; gap: 10px; }
+#hiddenInput { position: absolute; opacity: 0; pointer-events: none; left: 0; top: 0; width: 1px; height: 1px; }
+.shake { animation: shake .3s; }
+@keyframes shake { 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(3px); } }
+
+/* zen */
+.zen-area { font-family: var(--font-type); font-size: var(--type-size); line-height: 1.5; min-height: 4.5em; white-space: pre-wrap; word-break: break-word; }
+.zen-area .l { color: var(--text); }
+
+/* ------------------------------------------------------------- rain */
+.rain-wrap { position: relative; height: min(62vh, 540px); background: var(--surface); border-radius: var(--radius); overflow: hidden; }
+#rainCanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.rain-hud { position: absolute; left: 14px; right: 14px; top: 10px; display: flex; gap: 18px; font-weight: 800; color: var(--sub); pointer-events: none; flex-wrap: wrap; }
+.rain-hud b { color: var(--text); font-variant-numeric: tabular-nums; }
+.rain-hud .hearts { margin-left: auto; color: var(--error); letter-spacing: 2px; }
+.rain-typed {
+  position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); font-family: var(--font-type); font-size: 1.4rem;
+  background: var(--bg); padding: 6px 16px; border-radius: 10px; min-width: 160px; text-align: center; box-shadow: var(--shadow);
+  color: var(--main); min-height: 2.3rem;
+}
+.overlay-card {
+  position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 16px;
+  background: color-mix(in srgb, var(--surface) 82%, transparent); backdrop-filter: blur(3px);
+}
+.overlay-card h2 { font-family: var(--font-display); font-weight: 400; font-size: 2rem; margin: 0 0 6px; color: var(--main); }
+.overlay-card p { margin: 4px 0; color: var(--sub); font-weight: 700; max-width: 46ch; }
+
+/* ------------------------------------------------------------- buttons */
+.btn {
+  border: 0; background: var(--surface); color: var(--text); border-radius: 10px; padding: 9px 16px; font-weight: 800; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 8px; transition: background .15s, transform .1s;
+}
+.btn:hover { background: var(--surface-2); }
+.btn:active { transform: scale(.97); }
+.btn.primary { background: var(--main); color: var(--on-main); }
+.btn.primary:hover { background: color-mix(in srgb, var(--main) 85%, var(--text)); }
+.btn svg { width: 18px; height: 18px; }
+
+/* ------------------------------------------------------------- results */
+.results { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 18px 26px; align-items: start; }
+.res-main .k { color: var(--sub); font-weight: 800; font-size: 1rem; }
+.res-main .v { font-family: var(--font-display); font-size: 3.4rem; color: var(--main); line-height: 1.05; }
+.res-main .v.small { font-size: 2.6rem; }
+.pb-badge { display: inline-block; background: var(--main); color: var(--on-main); font-weight: 800; font-size: .75rem; padding: 3px 8px; border-radius: 6px; letter-spacing: .06em; margin-top: 6px; }
+.fail-badge { display: inline-block; background: var(--error); color: var(--bg); font-weight: 800; font-size: .75rem; padding: 3px 8px; border-radius: 6px; letter-spacing: .06em; }
+.chart-box { min-width: 0; }
+#chart { width: 100%; height: 190px; display: block; }
+.res-row { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 10px; }
+.res-row .cell { background: var(--surface); border-radius: 10px; padding: 9px 12px; }
+.cell .k { color: var(--sub); font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.cell .v { font-weight: 800; font-size: 1.25rem; font-variant-numeric: tabular-nums; }
+.res-extra { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 18px; }
+.panel { background: var(--surface); border-radius: var(--radius); padding: 14px; min-width: 0; }
+.panel h3 { margin: 0 0 10px; font-size: .78rem; letter-spacing: .1em; text-transform: uppercase; color: var(--sub); }
+.kbd { display: flex; flex-direction: column; gap: 5px; align-items: center; }
+.kbd .row { display: flex; gap: 5px; }
+.kbd .k {
+  width: clamp(20px, 5.4vw, 32px); height: clamp(22px, 5.4vw, 32px); border-radius: 6px; display: grid; place-items: center;
+  font-family: var(--font-type); font-size: .8rem; font-weight: 600; background: var(--bg); color: var(--sub); position: relative;
+}
+.kbd .k[data-n]::after { content: attr(data-n); position: absolute; top: -5px; right: -4px; font-size: .55rem; background: var(--error); color: var(--bg); border-radius: 6px; padding: 0 3px; }
+.missed-words { display: flex; flex-wrap: wrap; gap: 6px; font-family: var(--font-type); }
+.missed-words span { background: var(--bg); padding: 2px 8px; border-radius: 6px; color: var(--error); }
+.xp-gain { font-weight: 800; color: var(--good); }
+.res-actions { grid-column: 1 / -1; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+/* ------------------------------------------------------------- sheet / modal */
+.scrim { position: fixed; inset: 0; background: color-mix(in srgb, #000 45%, transparent); z-index: 40; animation: fade .2s; }
+@keyframes fade { from { opacity: 0; } }
+.sheet {
+  position: fixed; top: 0; right: 0; bottom: 0; width: min(420px, 100%); background: var(--bg); z-index: 41; overflow-y: auto;
+  padding: calc(18px + env(safe-area-inset-top, 0px)) max(18px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) 18px;
+  box-shadow: var(--shadow); animation: slide .25s ease-out; display: flex; flex-direction: column; gap: 18px;
+}
+@keyframes slide { from { transform: translateX(30px); opacity: 0; } }
+.sheet h2, .modal h2 { font-family: var(--font-display); font-weight: 400; margin: 0; font-size: 1.35rem; display: flex; align-items: center; justify-content: space-between; }
+.set-group { display: flex; flex-direction: column; gap: 10px; }
+.set-group h3 { margin: 0; font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; color: var(--main); }
+.set { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.set label, .set .lbl { font-weight: 700; }
+.set small { display: block; color: var(--sub); font-weight: 600; font-size: .8rem; }
+.seg { display: flex; background: var(--surface); border-radius: 9px; padding: 3px; gap: 2px; flex-wrap: wrap; justify-content: flex-end; }
+.seg button { border: 0; background: transparent; padding: 5px 9px; border-radius: 7px; cursor: pointer; font-weight: 700; color: var(--sub); font-size: .85rem; }
+.seg button[aria-pressed="true"] { background: var(--main); color: var(--on-main); }
+.sheet select, .sheet input[type="number"] { background: var(--surface); border: 0; border-radius: 8px; padding: 6px 9px; font-weight: 700; }
+.sheet input[type="range"] { accent-color: var(--main); width: 130px; }
+.sheet textarea { width: 100%; min-height: 90px; background: var(--surface); border: 0; border-radius: 10px; padding: 10px; font-family: var(--font-type); font-size: .9rem; resize: vertical; }
+.themes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.theme-chip {
+  border: 2px solid transparent; border-radius: 10px; padding: 8px 4px 6px; cursor: pointer; font-weight: 800; font-size: .72rem;
+  display: flex; flex-direction: column; align-items: center; gap: 5px; background: var(--surface);
+}
+.theme-chip[aria-pressed="true"] { border-color: var(--main); }
+.theme-chip .sw { display: flex; gap: 2px; }
+.theme-chip .sw i { width: 12px; height: 12px; border-radius: 50%; display: block; }
+.modal {
+  position: fixed; z-index: 41; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: min(760px, calc(100% - 32px)); max-height: calc(100% - 48px); overflow-y: auto; background: var(--bg);
+  border-radius: 18px; padding: 20px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 16px; animation: fade .2s;
+}
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+.ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.ach { background: var(--surface); border-radius: 12px; padding: 10px; display: flex; gap: 10px; align-items: center; opacity: .45; }
+.ach.got { opacity: 1; }
+.ach .ico { font-size: 1.5rem; filter: grayscale(1); }
+.ach.got .ico { filter: none; }
+.ach b { display: block; font-size: .85rem; }
+.ach small { color: var(--sub); font-size: .75rem; font-weight: 600; }
+.hist { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: .88rem; }
+.hist th { text-align: left; color: var(--sub); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; padding: 6px 8px; }
+.hist td { padding: 6px 8px; border-top: 1px solid var(--surface-2); }
+.table-wrap { overflow-x: auto; }
+.empty { color: var(--sub); font-weight: 700; padding: 10px 0; }
+
+.toast-stack { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 8px; z-index: 60; }
+.toast {
+  background: var(--text); color: var(--bg); padding: 10px 14px; border-radius: 12px; font-weight: 800; box-shadow: var(--shadow);
+  animation: toastIn .3s ease-out; display: flex; gap: 10px; align-items: center; max-width: 320px;
+}
+.toast small { display: block; font-weight: 600; opacity: .75; }
+@keyframes toastIn { from { transform: translateY(12px); opacity: 0; } }
+#confetti { position: fixed; inset: 0; pointer-events: none; z-index: 70; width: 100%; height: 100%; }
+
+footer { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; color: var(--sub); font-size: .82rem; font-weight: 700; }
+kbd { font-family: var(--font-type); background: var(--surface); padding: 1px 6px; border-radius: 5px; font-size: .78rem; color: var(--text); }
+
+/* focus mode: hide chrome while typing */
+body.typing.focus-mode header, body.typing.focus-mode .rail, body.typing.focus-mode footer, body.typing.focus-mode .under-row { opacity: 0; pointer-events: none; }
+header, .rail, footer, .under-row { transition: opacity .25s; }
+
+@media (max-width: 720px) {
+  :root { --type-size: 1.3rem; }
+  .results { grid-template-columns: 1fr; }
+  .res-main { display: flex; gap: 26px; flex-wrap: wrap; }
+  .res-extra { grid-template-columns: 1fr; }
+  .head-right { margin-left: 0; width: 100%; justify-content: flex-end; }
+  .logo { font-size: 1.3rem; }
+  .themes { grid-template-columns: repeat(3, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01s !important; transition-duration: .01s !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <header>
+    <div class="logo" aria-label="Typo Arcade"><span class="key">T</span><span>typo<b>arcade</b></span></div>
+    <nav class="modes" aria-label="Game mode">
+      <button type="button" data-game="classic" aria-pressed="true">Classic</button>
+      <button type="button" data-game="rain" aria-pressed="false">Word Rain</button>
+      <button type="button" data-game="daily" aria-pressed="false">Daily</button>
+      <button type="button" data-game="weak" aria-pressed="false">Weak Keys</button>
+    </nav>
+    <div class="head-right">
+      <div class="level" title="Earn XP from every test"><span class="lv" id="lvNum">LV 1</span><div class="xpbar"><i id="xpFill"></i></div><span id="xpText">0 xp</span></div>
+      <button type="button" class="icon-btn" id="statsBtn" aria-label="Stats and achievements">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+      </button>
+      <button type="button" class="icon-btn" id="settingsBtn" aria-label="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="rail" id="rail" aria-label="Test options"></div>
+
+  <main id="stage" aria-live="off"></main>
+
+  <footer>
+    <span><kbd>tab</kbd> restart</span>
+    <span><kbd>esc</kbd> settings</span>
+    <span><kbd>ctrl</kbd>+<kbd>⌫</kbd> delete word</span>
+    <span><kbd>shift</kbd>+<kbd>enter</kbd> finish zen</span>
+  </footer>
+</div>
+<input id="hiddenInput" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Typing input">
+<canvas id="confetti" aria-hidden="true"></canvas>
+<div class="toast-stack" id="toasts" aria-live="polite"></div>
+
+<script>
+(() => {
+"use strict";
+
+/* ===================================================================== data */
+const WORDS = {
+  english: ("the be of and a to in he have it that for they with as not on she at by this we you do but from or which one would all will there say who make when can more if no man out other so what time up go about than into could state only new year some take come these know see use get like then first any work now may such give over think most even find day also after way many must look before great back through long where much should well people down own just because good each those feel seem how high too place little world very still nation hand old life tell write become here show house both between need mean call develop under last right move thing general school never same another begin while number part turn real leave might want point form off child few small since against ask late home interest large person end open public follow during present without again hold around possible head consider word program problem however lead system set order eye plan run keep face fact group play stand increase early course change help line light music city water story friend bring sun game river song dream happy smile garden").split(" "),
+  hard: ("rhythm algorithm quizzical jukebox oxygen whimsical labyrinth sphinx mnemonic galaxy kaleidoscope zephyr juxtapose voyage yacht pneumonia buzzword quixotic fjord awkward bookkeeper crypt glyph lymph nymph schism psyche wizardry vortex jazzy fuzzy blizzard dazzling exquisite paradigm silhouette symphony xylophone hyphen asymmetry boulevard cylinder dichotomy euphoria frolicking gazebo haphazard ivory jackpot kumquat liquefy maximize nostalgia obnoxious phlegm quartz rendezvous squawk thwart unzip vexing wavelength yodel zigzag acquiesce bureaucracy conscientious mischievous onomatopoeia playwright questionnaire sovereignty threshold unequivocal").split(" "),
+  code: ("const let var function return => async await if else for while switch case break import export from class this new null undefined true false map() filter() reduce() console.log() useState useEffect def lambda print() self elif None True len() range() {} [] () === !== && || ++ -- += <div> </div> npm git commit push merge #include int main() std::cout SELECT * FROM WHERE JOIN fn match Some(x) Ok(()) pub mod try catch throw typeof interface type enum").split(" "),
+};
+const QUOTES = [
+  "The quiet keyboard hums like rain on a tin roof, and every word you finish is one more drop in the bucket.",
+  "Speed is just accuracy that stopped being nervous.",
+  "Small habits, repeated every morning, become the loud results everyone else notices later.",
+  "A good pit stop is two seconds of chaos that took two thousand hours of calm practice.",
+  "Write the first draft fast, then come back with a cup of tea and a sharper pencil.",
+  "If the bug only appears on Fridays, check what else only happens on Fridays.",
+  "The river does not argue with the rock; it simply keeps moving and wins eventually.",
+  "Curiosity is a lantern: it does not light the whole road, only the next few steps.",
+  "Every expert you admire once typed with two fingers and looked down at the keys.",
+  "Measure twice, cut once, and label the drawer so future you can find the screws.",
+  "A calm mind reads the next word before the fingers have finished the last one.",
+  "The best playlists, like the best sentences, know exactly when to pause.",
+  "Practice does not make perfect; practice makes progress, and progress is plenty.",
+  "Stars look still from here, but every one of them is racing through the dark.",
+  "Fortune favours the prepared keyboard, the stretched fingers, and the straight back.",
+];
+const ROWS = ["qwertyuiop", "asdfghjkl", "zxcvbnm"];
+const ACHIEVEMENTS = [
+  { id: "first", ico: "🎉", name: "First keys", desc: "Finish your first test" },
+  { id: "w40", ico: "🚲", name: "Cruising", desc: "Reach 40 wpm" },
+  { id: "w60", ico: "🏎️", name: "Fast lane", desc: "Reach 60 wpm" },
+  { id: "w80", ico: "🚀", name: "Liftoff", desc: "Reach 80 wpm" },
+  { id: "w100", ico: "🌠", name: "Light speed", desc: "Reach 100 wpm" },
+  { id: "acc100", ico: "🎯", name: "Bullseye", desc: "100% accuracy on a 25+ word test" },
+  { id: "combo50", ico: "🔥", name: "On fire", desc: "50 correct words in a row" },
+  { id: "marathon", ico: "⏱️", name: "Marathon", desc: "Finish a 120 second test" },
+  { id: "rain5", ico: "🌧️", name: "Storm chaser", desc: "Reach level 5 in Word Rain" },
+  { id: "daily3", ico: "📅", name: "Regular", desc: "3 day Daily streak" },
+  { id: "master", ico: "🥋", name: "Black belt", desc: "Finish a test on Master difficulty" },
+  { id: "tests25", ico: "🏆", name: "Arcade regular", desc: "Finish 25 tests" },
+];
+const THEMES = {
+  auto: ["#f5f3fb", "#6a4cff", "#1a1833", "#ffb454"],
+  arcade: ["#1a1833", "#ffb454", "#6ee7c8"], paper: ["#f5f3fb", "#6a4cff", "#2a2540"],
+  sakura: ["#fff1f4", "#e2507a", "#5a2a3a"], ocean: ["#0d2233", "#4fd1e8", "#8ff0a4"],
+  amber: ["#17110a", "#ffb000", "#ffe9a8"], mint: ["#eefaf4", "#0e9f6e", "#1e3b31"],
+  candy: ["#2a1235", "#ff7ad9", "#7af0ff"],
+};
+const FONTS = {
+  "JetBrains Mono": '"JetBrains Mono", ui-monospace, monospace', "Fira Code": '"Fira Code", ui-monospace, monospace',
+  "Space Mono": '"Space Mono", ui-monospace, monospace', "IBM Plex Mono": '"IBM Plex Mono", ui-monospace, monospace',
+  "Courier Prime": '"Courier Prime", "Courier New", monospace', "Nunito (not mono)": '"Nunito", system-ui, sans-serif',
+};
+
+/* ===================================================================== storage */
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("typo-arcade:" + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("typo-arcade:" + k, JSON.stringify(v)); } catch { /* storage unavailable */ } },
+};
+const DEFAULTS = {
+  mode: "time", time: 30, words: 25, list: "english", punct: false, nums: false,
+  difficulty: "normal", stopOnError: false, noBackspace: false, blind: false,
+  theme: "auto", font: "JetBrains Mono", size: 1.75, caret: "line", smoothCaret: true,
+  pace: "off", paceWpm: 60, liveWpm: true, liveAcc: true, focusMode: true,
+  sound: "pop", errorSound: true, volume: 0.5, confetti: true, custom: "Type anything you like here. Paste a paragraph from your notes, a poem, or code you want to practise.",
+};
+const S = Object.assign({}, DEFAULTS, store.get("settings", {}));
+const P = Object.assign({ xp: 0, tests: 0, seconds: 0, pbs: {}, history: [], achievements: [], missed: {}, daily: {}, rainBest: 0 }, store.get("profile", {}));
+const saveSettings = () => store.set("settings", S);
+const saveProfile = () => store.set("profile", P);
+
+/* ===================================================================== helpers */
+const $ = (s, r = document) => r.querySelector(s);
+const el = (tag, attrs = {}, html = "") => { const e = document.createElement(tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); if (html) e.innerHTML = html; return e; };
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+function mulberry(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const hashStr = (s) => { let h = 2166136261; for (const c of s) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return h >>> 0; };
+const todayKey = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+const levelOf = (xp) => { let lv = 1, need = 100, left = xp; while (left >= need) { left -= need; lv++; need = Math.round(need * 1.18); } return { lv, into: left, need }; };
+
+/* ===================================================================== sound */
+const Sound = (() => {
+  let ctx = null;
+  const ac = () => { if (!ctx) { try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch { return null; } } if (ctx.state === "suspended") ctx.resume(); return ctx; };
+  const pent = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21];
+  function tone(freq, dur, type = "sine", gain = 0.2, slide = 0) {
+    const c = ac(); if (!c) return;
+    const o = c.createOscillator(), g = c.createGain(), t = c.currentTime;
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(40, freq * slide), t + dur);
+    g.gain.setValueAtTime(gain * S.volume, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(c.destination); o.start(t); o.stop(t + dur + 0.02);
+  }
+  function noise(dur, freq, gain = 0.25) {
+    const c = ac(); if (!c) return;
+    const len = Math.floor(c.sampleRate * dur), buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len) ** 3;
+    const src = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+    f.type = "bandpass"; f.frequency.value = freq; f.Q.value = 1.2; g.gain.value = gain * S.volume;
+    src.buffer = buf; src.connect(f).connect(g).connect(c.destination); src.start();
+  }
+  return {
+    key(combo = 0) {
+      if (S.sound === "off") return;
+      if (S.sound === "click") noise(0.03, 3200 + Math.random() * 600, 0.5);
+      else if (S.sound === "pop") tone(520 + Math.random() * 80, 0.07, "sine", 0.22, 0.6);
+      else if (S.sound === "typewriter") { noise(0.05, 1800, 0.55); tone(110, 0.05, "triangle", 0.15, 0.7); }
+      else if (S.sound === "melody") { const n = pent[combo % pent.length] + 12 * Math.floor((combo % 30) / 10); tone(261.6 * 2 ** (n / 12), 0.18, "triangle", 0.18); }
+    },
+    error() { if (S.errorSound && S.sound !== "off") tone(150, 0.12, "sawtooth", 0.08, 0.7); },
+    good() { if (S.sound !== "off") { tone(660, 0.08, "square", 0.06); setTimeout(() => tone(990, 0.12, "square", 0.06), 70); } },
+    boom() { if (S.sound !== "off") noise(0.25, 300, 0.5); },
+    preview() { this.key(Math.floor(Math.random() * 10)); },
+  };
+})();
+
+/* ===================================================================== confetti */
+const Confetti = (() => {
+  const cv = $("#confetti"), ctx = cv.getContext("2d"); let parts = [], running = false;
+  function burst(n = 140) {
+    if (!S.confetti || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    cv.width = innerWidth; cv.height = innerHeight;
+    const cols = [css("--main"), css("--good"), css("--error"), css("--text")];
+    for (let i = 0; i < n; i++) parts.push({ x: innerWidth / 2 + (Math.random() - .5) * 200, y: innerHeight * .35, vx: (Math.random() - .5) * 14, vy: -Math.random() * 13 - 3, r: Math.random() * 6 + 3, c: cols[i % cols.length], a: Math.random() * 6, life: 1 });
+    if (!running) { running = true; requestAnimationFrame(step); }
+  }
+  function step() {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    parts = parts.filter((p) => p.life > 0 && p.y < cv.height + 20);
+    for (const p of parts) {
+      p.vy += 0.35; p.vx *= 0.99; p.x += p.vx; p.y += p.vy; p.a += 0.2; p.life -= 0.006;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a); ctx.globalAlpha = Math.max(0, p.life); ctx.fillStyle = p.c; ctx.fillRect(-p.r / 2, -p.r / 4, p.r, p.r / 2); ctx.restore();
+    }
+    if (parts.length) requestAnimationFrame(step); else { running = false; ctx.clearRect(0, 0, cv.width, cv.height); }
+  }
+  return { burst };
+})();
+
+function toast(title, sub, ico = "✨") {
+  const t = el("div", { class: "toast" }, `<span style="font-size:1.4rem">${ico}</span><div>${esc(title)}${sub ? `<small>${esc(sub)}</small>` : ""}</div>`);
+  $("#toasts").appendChild(t); setTimeout(() => t.remove(), 3800);
+}
+function unlock(id) {
+  if (P.achievements.includes(id)) return;
+  const a = ACHIEVEMENTS.find((x) => x.id === id); if (!a) return;
+  P.achievements.push(id); saveProfile(); toast(`Achievement: ${a.name}`, a.desc, a.ico); Sound.good();
+}
+
+/* ===================================================================== theme & appearance */
+function applyAppearance() {
+  const root = document.documentElement;
+  for (const t of Object.keys(THEMES)) root.classList.remove("theme-" + t);
+  if (S.theme !== "auto") root.classList.add("theme-" + S.theme);
+  root.style.setProperty("--font-type", FONTS[S.font] || FONTS["JetBrains Mono"]);
+  root.style.setProperty("--type-size", S.size + "rem");
+  document.body.classList.toggle("focus-mode", S.focusMode);
+  if (Game.current && Game.current.layout) requestAnimationFrame(() => Game.current.layout());
+}
+
+/* ===================================================================== word generation */
+function pickWords(n, rng = Math.random, list = S.list, opts = { punct: S.punct, nums: S.nums }) {
+  const src = WORDS[list] || WORDS.english, out = [];
+  let capNext = true;
+  for (let i = 0; i < n; i++) {
+    let w = src[Math.floor(rng() * src.length)];
+    if (out.length && w === out[out.length - 1]) w = src[Math.floor(rng() * src.length)];
+    if (opts.nums && rng() < 0.12) w = String(Math.floor(rng() * (rng() < .5 ? 100 : 10000)));
+    if (opts.punct && list !== "code") {
+      if (capNext) w = w[0].toUpperCase() + w.slice(1);
+      capNext = false;
+      const r = rng();
+      if (r < 0.08) { w += "."; capNext = true; } else if (r < 0.15) w += ","; else if (r < 0.18) { w += "?"; capNext = true; }
+      else if (r < 0.20) { w += "!"; capNext = true; } else if (r < 0.22) w += ";"; else if (r < 0.24) w = `"${w}"`; else if (r < 0.26) w = `(${w})`; else if (r < 0.27) w += ":";
+    }
+    out.push(w);
+  }
+  return out;
+}
+function weakWords(n) {
+  const missed = Object.entries(P.missed).filter(([k]) => /^[a-z]$/.test(k)).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([k]) => k);
+  if (!missed.length) return { words: pickWords(n, Math.random, "english", { punct: false, nums: false }), keys: [] };
+  const pool = [...WORDS.english, ...WORDS.hard].filter((w) => /^[a-z]+$/.test(w));
+  const scored = pool.map((w) => [w, [...w].reduce((s, c) => s + (missed.includes(c) ? 1 + (6 - missed.indexOf(c)) * .4 : 0), 0)]).filter((x) => x[1] > 0);
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    const total = scored.reduce((s, x) => s + x[1] ** 2, 0); let r = Math.random() * total;
+    for (const [w, sc] of scored) { r -= sc ** 2; if (r <= 0) { out.push(w); break; } }
+  }
+  return { words: out, keys: missed };
+}
+
+/* ===================================================================== input */
+const input = $("#hiddenInput");
+const SENTINEL = "  ";
+input.value = SENTINEL;
+let inputHandler = null;
+input.addEventListener("input", (e) => {
+  const t = e.inputType || "";
+  if (inputHandler) {
+    if (t.startsWith("delete")) inputHandler.back(t === "deleteWordBackward" || t === "deleteSoftLineBackward");
+    else if (t === "insertLineBreak") inputHandler.enter && inputHandler.enter(false);
+    else {
+      const data = e.data != null ? e.data : input.value.replace(/^ {0,2}/, "");
+      for (const ch of data) inputHandler.char(ch === " " ? " " : ch);
+    }
+  }
+  input.value = SENTINEL; input.setSelectionRange(2, 2);
+});
+input.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") { e.preventDefault(); inputHandler && inputHandler.enter && inputHandler.enter(e.shiftKey); }
+});
+input.addEventListener("blur", () => Game.current && Game.current.onBlur && Game.current.onBlur());
+input.addEventListener("focus", () => Game.current && Game.current.onFocus && Game.current.onFocus());
+function focusInput() { input.value = SENTINEL; input.focus({ preventScroll: true }); try { input.setSelectionRange(2, 2); } catch {} }
+
+document.addEventListener("keydown", (e) => {
+  const inField = e.target.closest && e.target.closest(".sheet, .modal") && e.target !== input;
+  if (e.key === "Escape") { e.preventDefault(); if (UI.closeAll()) return; UI.openSettings(); return; }
+  if (UI.open || inField) return;
+  if (e.key === "Tab") { e.preventDefault(); Game.restart(); return; }
+  if (document.activeElement !== input && !e.metaKey && !e.ctrlKey && !e.altKey && (e.key.length === 1 || e.key === "Backspace")) {
+    if (e.target.closest && e.target.closest("button, select, input, textarea") && e.key === " ") return;
+    e.preventDefault(); focusInput();
+    if (inputHandler) { if (e.key === "Backspace") inputHandler.back(false); else inputHandler.char(e.key); }
+  }
+});
+
+/* ===================================================================== classic typing test */
+class TypingTest {
+  constructor(cfg) {
+    this.cfg = cfg; // {kind:'time'|'words'|'quote'|'zen'|'custom'|'daily'|'weak', words?, seconds?, label, pbKey}
+    this.stage = $("#stage");
+    this.stage.innerHTML = `
+      <div class="live" id="live">
+        <span class="big" id="liveMain"></span>
+        <span class="stat" id="liveWpm"></span><span class="stat" id="liveAcc"></span>
+        <span class="combo" id="combo"><span class="flame">🔥</span><span id="comboN">0</span></span>
+      </div>
+      <div class="typebox" id="typebox">
+        <div class="words-wrap" id="wrap"><div class="words${S.blind ? " blind" : ""}" id="words"></div></div>
+        <div class="focus-hint" id="focusHint" hidden>Click here or press any key to keep typing</div>
+      </div>
+      ${cfg.note ? `<p style="margin:0;color:var(--sub);font-weight:700;text-align:center">${cfg.note}</p>` : ""}
+      <div class="under-row"><button class="btn" id="restartBtn" type="button" title="Restart (tab)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Restart</button></div>`;
+    this.wordsEl = $("#words"); this.wrap = $("#wrap");
+    this.caret = el("div", { class: "caret" }); this.ghost = el("div", { class: "ghost" });
+    $("#restartBtn").onclick = () => Game.restart();
+    $("#typebox").addEventListener("click", focusInput);
+    $("#focusHint").addEventListener("click", focusInput);
+    this.reset();
+  }
+  reset() {
+    const c = this.cfg;
+    this.zen = c.kind === "zen";
+    this.targets = c.words ? c.words.slice() : (this.zen ? [] : pickWords(c.kind === "time" ? 80 : c.count || 25));
+    this.typed = [""]; this.wi = 0;
+    this.started = false; this.done = false; this.failed = false;
+    this.keys = 0; this.goodKeys = 0; this.errors = 0; this.extra = 0;
+    this.combo = 0; this.bestCombo = 0;
+    this.secs = []; this.secKeys = 0; this.secErr = 0;
+    this.missedChars = {}; this.missedWords = new Set();
+    this.t0 = 0; this.elapsed = 0;
+    clearInterval(this.timer); cancelAnimationFrame(this.raf);
+    document.body.classList.remove("typing");
+    this.renderAll();
+    inputHandler = this;
+    this.updateLive();
+    requestAnimationFrame(() => { this.layout(); focusInput(); });
+  }
+  /* ---------- rendering */
+  renderAll() {
+    const frag = document.createDocumentFragment();
+    if (this.zen) {
+      this.wordsEl.className = "zen-area"; this.wordsEl.innerHTML = "";
+      this.wordsEl.appendChild(this.caret); return;
+    }
+    this.wordsEl.className = "words" + (S.blind ? " blind" : "");
+    this.wordEls = this.targets.map((w, i) => { const d = el("div", { class: "word" }); this.paintWord(d, i); frag.appendChild(d); return d; });
+    this.wordsEl.innerHTML = ""; this.wordsEl.appendChild(frag);
+    this.wordsEl.appendChild(this.caret); this.wordsEl.appendChild(this.ghost);
+  }
+  appendWords(n) {
+    const more = pickWords(n); const start = this.targets.length;
+    this.targets.push(...more);
+    more.forEach((w, k) => { const d = el("div", { class: "word" }); this.paintWord(d, start + k); this.wordsEl.insertBefore(d, this.caret); this.wordEls.push(d); });
+  }
+  paintWord(d, i) {
+    const t = this.targets[i] || "", y = this.typed[i] || "";
+    let h = "";
+    const n = Math.max(t.length, y.length);
+    for (let j = 0; j < n; j++) {
+      const ch = j < t.length ? t[j] : y[j];
+      let cls = "l";
+      if (j < y.length) cls += j >= t.length ? " extra" : y[j] === t[j] ? " ok" : " bad";
+      h += `<span class="${cls}">${esc(ch)}</span>`;
+    }
+    d.innerHTML = h;
+    d.classList.toggle("err", i < this.wi && y !== t);
+  }
+  layout() {
+    if (this.zen) { this.placeZenCaret(); return; }
+    const first = this.wordEls[0]; if (!first) return;
+    const cs = getComputedStyle(first);
+    this.lineStep = first.offsetHeight + parseFloat(cs.marginTop) + parseFloat(cs.marginBottom);
+    this.wrap.style.height = this.lineStep * 3 + "px";
+    this.placeCaret();
+  }
+  placeCaret() {
+    const caret = this.caret;
+    caret.className = "caret " + (S.caret !== "line" ? S.caret : "") + (S.smoothCaret ? " smooth" : "") + (this.started ? "" : " blink");
+    const w = this.wordEls[this.wi]; if (!w) return;
+    const y = this.typed[this.wi] || "", spans = w.children;
+    let left, top;
+    if (y.length < spans.length) { const s = spans[y.length]; left = w.offsetLeft + s.offsetLeft; top = w.offsetTop + s.offsetTop; }
+    else { const s = spans[spans.length - 1]; left = w.offsetLeft + (s ? s.offsetLeft + s.offsetWidth : 0); top = w.offsetTop + (s ? s.offsetTop : 0); }
+    const lh = w.offsetHeight;
+    const caretH = S.caret === "under" ? 3 : lh * 0.78;
+    caret.style.height = caretH + "px";
+    caret.style.left = left + "px";
+    caret.style.top = (S.caret === "under" ? top + lh * 0.88 : top + lh * 0.11) + "px";
+    // keep the current line as the second visible line
+    const line = Math.round(w.offsetTop / this.lineStep);
+    this.scroll = Math.max(0, line - 1) * this.lineStep;
+    this.wordsEl.style.transform = `translateY(${-this.scroll}px)`;
+    this.placeGhost();
+  }
+  placeGhost() {
+    const g = this.ghost;
+    const wpm = S.pace === "pb" ? (P.pbs[this.cfg.pbKey] || {}).wpm : S.pace === "custom" ? S.paceWpm : null;
+    if (!wpm || !this.started || this.done || this.zen) { g.hidden = true; return; }
+    g.hidden = false;
+    let chars = (wpm * 5 * this.elapsed) / 60, i = 0;
+    while (i < this.targets.length && chars > this.targets[i].length + 1) { chars -= this.targets[i].length + 1; i++; }
+    const w = this.wordEls[i]; if (!w) { g.hidden = true; return; }
+    const spans = w.children, j = Math.min(Math.floor(chars), spans.length);
+    const s = spans[Math.min(j, spans.length - 1)];
+    const left = w.offsetLeft + (s ? s.offsetLeft + (j >= spans.length ? s.offsetWidth : 0) : 0);
+    g.style.left = left + "px"; g.style.top = w.offsetTop + w.offsetHeight * 0.11 + "px"; g.style.height = w.offsetHeight * 0.78 + "px";
+    g.title = `pace: ${wpm} wpm`;
+  }
+  placeZenCaret() {
+    const last = this.wordsEl.lastElementChild === this.caret ? this.caret.previousElementSibling : null;
+    const lh = parseFloat(getComputedStyle(this.wordsEl).fontSize) * 1.5;
+    this.caret.className = "caret " + (S.caret !== "line" ? S.caret : "") + (this.started ? "" : " blink");
+    this.caret.style.height = lh * .78 + "px";
+    if (!last) { this.caret.style.left = "0px"; this.caret.style.top = lh * .11 + "px"; return; }
+    this.caret.style.left = last.offsetLeft + last.offsetWidth + "px"; this.caret.style.top = last.offsetTop + lh * .11 + "px";
+  }
+  /* ---------- timing */
+  start() {
+    this.started = true; this.t0 = performance.now();
+    document.body.classList.add("typing");
+    this.timer = setInterval(() => this.tickSecond(), 1000);
+    const loop = () => {
+      if (this.done) return;
+      this.elapsed = (performance.now() - this.t0) / 1000;
+      if (this.cfg.kind === "time" && this.elapsed >= this.cfg.seconds) { this.elapsed = this.cfg.seconds; this.finish(); return; }
+      this.placeGhost(); this.updateLive();
+      this.raf = requestAnimationFrame(loop);
+    };
+    this.raf = requestAnimationFrame(loop);
+  }
+  tickSecond() {
+    if (this.done) return;
+    const t = (performance.now() - this.t0) / 1000;
+    this.secs.push({ t: this.secs.length + 1, raw: this.secKeys * 12, err: this.secErr, wpm: this.netWpm(t) });
+    this.secKeys = 0; this.secErr = 0;
+  }
+  correctChars(final) {
+    let n = 0;
+    for (let i = 0; i < this.wi; i++) if (this.typed[i] === this.targets[i]) n += this.targets[i].length + 1;
+    const cur = this.typed[this.wi] || "", tgt = this.targets[this.wi] || "";
+    if (final ? cur === tgt : tgt.startsWith(cur)) n += cur.length;
+    return n;
+  }
+  netWpm(t) {
+    if (this.zen) return t > 0 ? (this.goodKeys / 5) / (t / 60) : 0;
+    return t > 0 ? (this.correctChars(false) / 5) / (t / 60) : 0;
+  }
+  updateLive() {
+    const c = this.cfg; let main = "";
+    if (c.kind === "time") main = this.started ? Math.max(0, Math.ceil(c.seconds - this.elapsed)) : c.seconds;
+    else if (this.zen) main = this.started ? `${Math.floor(this.elapsed)}s` : "zen";
+    else main = `${Math.min(this.wi, this.targets.length)}/${this.targets.length}`;
+    $("#liveMain").textContent = main;
+    $("#liveWpm").innerHTML = S.liveWpm && this.started ? `<b>${Math.round(this.netWpm(this.elapsed))}</b> wpm` : "";
+    $("#liveAcc").innerHTML = S.liveAcc && this.keys ? `<b>${Math.round(100 * this.goodKeys / this.keys)}</b>% acc` : "";
+  }
+  bumpCombo(ok) {
+    const box = $("#combo");
+    if (ok) { this.combo++; this.bestCombo = Math.max(this.bestCombo, this.combo); } else this.combo = 0;
+    $("#comboN").textContent = this.combo;
+    box.classList.toggle("hot", this.combo >= 10);
+    if (ok && this.combo % 10 === 0 && this.combo) { box.classList.remove("bump"); void box.offsetWidth; box.classList.add("bump"); setTimeout(() => box.classList.remove("bump"), 160); }
+  }
+  /* ---------- input */
+  char(ch) {
+    if (this.done) return;
+    if (!this.started) this.start();
+    if (this.zen) return this.zenChar(ch);
+    const tgt = this.targets[this.wi] || "", cur = this.typed[this.wi] || "";
+    if (ch === " ") {
+      if (!cur.length) return;
+      if (S.stopOnError && cur !== tgt) { this.flashError(); return; }
+      const ok = cur === tgt;
+      this.keys++; this.secKeys++;
+      if (ok) this.goodKeys++; else { this.errors++; this.secErr++; this.missedWords.add(tgt); if (cur.length < tgt.length) this.recordMiss(tgt[cur.length]); }
+      if (!ok && S.difficulty === "expert") { this.fail("Expert mode: a word was submitted with a mistake."); return; }
+      if (!ok) Sound.error(); else Sound.key(this.combo);
+      this.bumpCombo(ok);
+      this.wi++; this.typed[this.wi] = this.typed[this.wi] || "";
+      this.paintWord(this.wordEls[this.wi - 1], this.wi - 1);
+      if (this.wi >= this.targets.length) { this.finish(); return; }
+      if (this.cfg.kind === "time" && this.targets.length - this.wi < 40) this.appendWords(60);
+      this.placeCaret(); return;
+    }
+    const pos = cur.length, ok = ch === tgt[pos];
+    this.keys++; this.secKeys++;
+    if (ok) this.goodKeys++;
+    else {
+      this.errors++; this.secErr++; this.missedWords.add(tgt);
+      if (pos < tgt.length) this.recordMiss(tgt[pos]); else this.extra++;
+      if (S.difficulty === "master") { this.fail("Master mode: one wrong key ends the run."); return; }
+      if (S.stopOnError) { Sound.error(); this.flashError(); return; }
+      this.bumpCombo(false);
+    }
+    if (pos >= tgt.length + 12) return; // cap runaway extra letters
+    ok ? Sound.key(this.combo) : Sound.error();
+    this.typed[this.wi] = cur + ch;
+    this.paintWord(this.wordEls[this.wi], this.wi);
+    // last word typed exactly: finish without needing space
+    if (this.wi === this.targets.length - 1 && this.typed[this.wi] === tgt) { this.wi++; this.finish(); return; }
+    this.placeCaret();
+  }
+  back(word) {
+    if (this.done || this.zen) { if (this.zen) this.zenBack(word); return; }
+    if (S.noBackspace) return;
+    let cur = this.typed[this.wi] || "";
+    if (!cur.length) {
+      // step back into the previous word only if it was wrong
+      if (this.wi > 0 && this.typed[this.wi - 1] !== this.targets[this.wi - 1]) {
+        this.typed[this.wi] = ""; this.wi--;
+        cur = this.typed[this.wi];
+        this.paintWord(this.wordEls[this.wi], this.wi);
+        if (!word) { this.placeCaret(); return; }
+      } else return;
+    }
+    this.typed[this.wi] = word ? "" : cur.slice(0, -1);
+    this.paintWord(this.wordEls[this.wi], this.wi); this.placeCaret();
+  }
+  enter(shift) { if (this.zen && shift && this.started) this.finish(); else if (this.zen) this.zenChar("\n"); }
+  zenChar(ch) {
+    this.keys++; this.goodKeys++; this.secKeys++;
+    Sound.key(this.combo); if (ch === " ") this.bumpCombo(true);
+    const s = el("span", { class: "l" }); s.textContent = ch; this.wordsEl.insertBefore(s, this.caret);
+    this.placeZenCaret();
+  }
+  zenBack(word) {
+    const del = () => { const p = this.caret.previousElementSibling; if (p) p.remove(); return p; };
+    if (word) { let p; while ((p = this.caret.previousElementSibling) && p.textContent === " ") p.remove(); while ((p = this.caret.previousElementSibling) && p.textContent !== " ") p.remove(); }
+    else del();
+    this.placeZenCaret();
+  }
+  recordMiss(c) { if (!c) return; const k = c.toLowerCase(); this.missedChars[k] = (this.missedChars[k] || 0) + 1; }
+  flashError() { const b = $("#typebox"); b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake"); }
+  onBlur() { if (!this.done) setTimeout(() => { if (document.activeElement !== input && !this.done && $("#focusHint")) $("#focusHint").hidden = false; }, 120); }
+  onFocus() { const h = $("#focusHint"); if (h) h.hidden = true; }
+  fail(reason) { this.failed = reason; Sound.boom(); this.flashError(); this.finish(); }
+  /* ---------- finish */
+  finish() {
+    if (this.done) return;
+    this.done = true; clearInterval(this.timer); cancelAnimationFrame(this.raf);
+    document.body.classList.remove("typing");
+    const t = Math.max(0.5, this.cfg.kind === "time" && !this.failed ? this.cfg.seconds : (performance.now() - this.t0) / 1000);
+    if (this.secKeys || this.secs.length === 0) this.secs.push({ t: Math.round(t * 10) / 10, raw: this.secKeys * 60 / Math.max(0.2, t - this.secs.length), err: this.secErr, wpm: this.netWpm(t) });
+    const wpm = this.zen ? (this.goodKeys / 5) / (t / 60) : (this.correctChars(true) / 5) / (t / 60);
+    const raw = (this.keys / 5) / (t / 60);
+    const acc = this.keys ? (100 * this.goodKeys / this.keys) : 0;
+    const raws = this.secs.map((s) => s.raw).filter((x) => x > 0);
+    const mean = raws.reduce((a, b) => a + b, 0) / (raws.length || 1);
+    const sd = Math.sqrt(raws.reduce((a, b) => a + (b - mean) ** 2, 0) / (raws.length || 1));
+    const consistency = raws.length > 1 ? Math.max(0, 100 * (1 - sd / mean)) : 100;
+    let correctWords = 0; for (let i = 0; i < this.wi; i++) if (this.typed[i] === this.targets[i]) correctWords++;
+    const result = {
+      wpm, raw, acc, consistency, t, combo: this.bestCombo, errors: this.errors, extra: this.extra,
+      words: this.zen ? this.wordsEl.textContent.trim().split(/\s+/).filter(Boolean).length : this.wi, correctWords,
+      chart: this.secs, missedChars: this.missedChars, missedWords: [...this.missedWords].slice(0, 12),
+      failed: this.failed, cfg: this.cfg, chars: this.goodKeys,
+    };
+    Game.complete(result);
+  }
+  destroy() { clearInterval(this.timer); cancelAnimationFrame(this.raf); document.body.classList.remove("typing"); }
+}
+
+/* ===================================================================== word rain */
+class WordRain {
+  constructor() {
+    this.stage = $("#stage");
+    this.stage.innerHTML = `
+      <div class="rain-wrap" id="rainWrap">
+        <canvas id="rainCanvas" aria-label="Falling words game"></canvas>
+        <div class="rain-hud"><span>score <b id="rScore">0</b></span><span>level <b id="rLevel">1</b></span><span>combo <b id="rCombo">x1</b></span><span>best <b id="rBest">${P.rainBest}</b></span><span class="hearts" id="rHearts">♥♥♥</span></div>
+        <div class="rain-typed" id="rTyped" aria-live="polite"></div>
+        <div class="overlay-card" id="rOverlay"><div>
+          <h2>Word Rain</h2>
+          <p>Words fall from the sky. Type one and press space to blast it before it lands.</p>
+          <p>Three misses and the storm wins. Every 8 blasts the rain gets faster.</p>
+          <p style="margin-top:14px"><button class="btn primary" id="rStart" type="button">Start the storm</button></p>
+        </div></div>
+      </div>
+      <div class="under-row"><span style="color:var(--sub);font-weight:700">Tip: the word you're typing glows. Long words score more.</span></div>`;
+    this.cv = $("#rainCanvas"); this.ctx = this.cv.getContext("2d");
+    $("#rStart").onclick = () => this.begin();
+    $("#rainWrap").addEventListener("click", () => focusInput());
+    this.ro = new ResizeObserver(() => this.layout()); this.ro.observe($("#rainWrap"));
+    this.running = false; this.typedStr = "";
+    inputHandler = this;
+    this.layout(); this.draw();
+  }
+  layout() {
+    const r = $("#rainWrap").getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2);
+    this.w = r.width; this.h = r.height; this.cv.width = r.width * dpr; this.cv.height = r.height * dpr;
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0); if (!this.running) this.draw();
+  }
+  begin() {
+    $("#rOverlay").hidden = true;
+    Object.assign(this, { drops: [], parts: [], score: 0, level: 1, lives: 3, combo: 1, blasted: 0, spawnT: 0, last: performance.now(), typedStr: "", keys: 0, good: 0, t0: performance.now(), shake: 0 });
+    this.updateHud(); this.running = true; focusInput();
+    const loop = (now) => { if (!this.running) return; const dt = Math.min(0.05, (now - this.last) / 1000); this.last = now; this.step(dt); this.draw(); this.raf = requestAnimationFrame(loop); };
+    this.raf = requestAnimationFrame(loop);
+  }
+  spawn() {
+    const pool = this.level < 3 ? WORDS.english.filter((w) => w.length <= 5) : this.level < 6 ? WORDS.english : [...WORDS.english, ...WORDS.hard];
+    const word = pool[Math.floor(Math.random() * pool.length)];
+    this.ctx.font = `600 20px ${css("--font-type")}`;
+    const tw = this.ctx.measureText(word).width;
+    this.drops.push({ word, x: 20 + Math.random() * Math.max(10, this.w - tw - 40), y: 52, v: 26 + this.level * 9 + Math.random() * 12, tw });
+  }
+  step(dt) {
+    this.spawnT -= dt;
+    if (this.spawnT <= 0) { this.spawn(); this.spawnT = Math.max(0.65, 2.3 - this.level * 0.17) * (0.7 + Math.random() * 0.6); }
+    for (const d of this.drops) d.y += d.v * dt;
+    const ground = this.h - 70;
+    for (const d of this.drops.filter((d) => d.y > ground)) {
+      this.drops.splice(this.drops.indexOf(d), 1); this.lives--; this.combo = 1; this.shake = 0.3; Sound.error(); this.explode(d, css("--error"));
+      if (this.typedStr && d.word.startsWith(this.typedStr)) this.setTyped("");
+      if (this.lives <= 0) return this.gameOver();
+      this.updateHud();
+    }
+    for (const p of this.parts) { p.vy += 400 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt; }
+    this.parts = this.parts.filter((p) => p.life > 0);
+    this.shake = Math.max(0, this.shake - dt);
+  }
+  target() { if (!this.typedStr) return null; return this.drops.filter((d) => d.word.startsWith(this.typedStr)).sort((a, b) => b.y - a.y)[0] || null; }
+  draw() {
+    const c = this.ctx, w = this.w, h = this.h; if (!w) return;
+    c.save(); c.clearRect(0, 0, w, h);
+    if (this.shake) c.translate((Math.random() - .5) * 10 * this.shake / .3, 0);
+    const sub = css("--sub"), main = css("--main"), text = css("--text"), bg = css("--bg");
+    // ground line
+    c.strokeStyle = sub; c.globalAlpha = .4; c.setLineDash([6, 8]); c.beginPath(); c.moveTo(0, h - 70); c.lineTo(w, h - 70); c.stroke(); c.setLineDash([]); c.globalAlpha = 1;
+    // ambient rain streaks
+    c.strokeStyle = sub; c.globalAlpha = .18; const tt = performance.now() / 1000;
+    for (let i = 0; i < 28; i++) { const x = (i * 97 + tt * 40) % w, y = (i * 53 + tt * 260) % (h - 70); c.beginPath(); c.moveTo(x, y); c.lineTo(x - 3, y + 12); c.stroke(); }
+    c.globalAlpha = 1;
+    const tgt = this.target();
+    c.font = `600 20px ${css("--font-type")}`; c.textBaseline = "middle";
+    for (const d of this.drops || []) {
+      const isT = d === tgt, danger = d.y > (h - 70) * .75;
+      c.fillStyle = isT ? main : bg; c.globalAlpha = isT ? .22 : .85;
+      roundRect(c, d.x - 8, d.y - 15, d.tw + 16, 30, 8); c.fill(); c.globalAlpha = 1;
+      if (isT) {
+        const n = this.typedStr.length, done = d.word.slice(0, n), rest = d.word.slice(n);
+        c.fillStyle = main; c.fillText(done, d.x, d.y); c.fillStyle = text; c.fillText(rest, d.x + c.measureText(done).width, d.y);
+      } else { c.fillStyle = danger ? css("--error") : text; c.fillText(d.word, d.x, d.y); }
+    }
+    for (const p of this.parts || []) { c.globalAlpha = Math.max(0, p.life / p.max); c.fillStyle = p.c; c.fillRect(p.x, p.y, p.s, p.s); }
+    c.restore();
+  }
+  explode(d, col) { for (let i = 0; i < 26; i++) this.parts.push({ x: d.x + Math.random() * d.tw, y: d.y, vx: (Math.random() - .5) * 320, vy: -Math.random() * 260, s: 3 + Math.random() * 4, life: .8, max: .8, c: col }); }
+  setTyped(s) { this.typedStr = s; $("#rTyped").textContent = s; }
+  char(ch) {
+    if (!this.running) { if (ch === " " || ch === "\n") this.begin(); return; }
+    this.keys++;
+    if (ch === " ") { this.submit(); return; }
+    const next = this.typedStr + ch;
+    if (this.drops.some((d) => d.word.startsWith(next))) { this.good++; Sound.key(this.blasted); this.setTyped(next); const t = this.target(); if (t && t.word === next) this.submit(); }
+    else { Sound.error(); this.combo = 1; this.updateHud(); const b = $("#rTyped"); b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake"); }
+  }
+  submit() {
+    const t = this.drops.find((d) => d.word === this.typedStr);
+    if (!t) { if (this.typedStr) { Sound.error(); this.combo = 1; } this.setTyped(""); this.updateHud(); return; }
+    this.drops.splice(this.drops.indexOf(t), 1); this.explode(t, css("--main")); Sound.good();
+    this.score += t.word.length * 10 * this.combo; this.combo = Math.min(8, this.combo + 1); this.blasted++;
+    if (this.blasted % 8 === 0) { this.level++; toast(`Level ${this.level}`, "The rain is getting heavier", "🌧️"); if (this.level >= 5) unlock("rain5"); }
+    this.setTyped(""); this.updateHud();
+  }
+  back(word) { if (this.running) this.setTyped(word ? "" : this.typedStr.slice(0, -1)); }
+  enter() { if (!this.running) this.begin(); else this.submit(); }
+  updateHud() {
+    $("#rScore").textContent = this.score; $("#rLevel").textContent = this.level; $("#rCombo").textContent = "x" + this.combo;
+    $("#rHearts").textContent = "♥".repeat(Math.max(0, this.lives)) + "♡".repeat(Math.max(0, 3 - this.lives));
+  }
+  gameOver() {
+    this.running = false; cancelAnimationFrame(this.raf); Sound.boom();
+    const mins = (performance.now() - this.t0) / 60000, wpm = Math.round((this.good / 5) / Math.max(mins, 0.01));
+    const best = this.score > P.rainBest; if (best) { P.rainBest = this.score; Confetti.burst(); }
+    const xp = Math.round(this.score / 20); addXp(xp); P.tests++; saveProfile(); unlock("first");
+    const o = $("#rOverlay"); o.hidden = false;
+    o.innerHTML = `<div><h2>Storm over</h2>
+      <p style="font-size:1.6rem;color:var(--text)">${this.score} points${best ? ' <span class="pb-badge">NEW BEST</span>' : ""}</p>
+      <p>Level ${this.level} · ${this.blasted} words blasted · about ${wpm} wpm · <span class="xp-gain">+${xp} xp</span></p>
+      <p style="margin-top:14px"><button class="btn primary" id="rStart" type="button">Play again</button></p><p><small>or press space</small></p></div>`;
+    $("#rStart").onclick = () => this.begin(); $("#rBest").textContent = P.rainBest;
+  }
+  destroy() { this.running = false; cancelAnimationFrame(this.raf); this.ro.disconnect(); }
+}
+function roundRect(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+
+/* ===================================================================== results */
+function addXp(n) { P.xp += Math.max(0, n); updateLevel(); }
+function updateLevel() {
+  const l = levelOf(P.xp);
+  $("#lvNum").textContent = "LV " + l.lv; $("#xpFill").style.width = (100 * l.into / l.need) + "%"; $("#xpText").textContent = `${l.into}/${l.need}`;
+}
+function showResults(r, extra) {
+  const stage = $("#stage");
+  const label = r.cfg.label;
+  stage.innerHTML = `
+    <div class="results">
+      <div class="res-main">
+        <div><div class="k">wpm</div><div class="v">${Math.round(r.wpm)}</div>${extra.pb ? '<span class="pb-badge">NEW PERSONAL BEST</span>' : ""}${r.failed ? '<span class="fail-badge">FAILED</span>' : ""}</div>
+        <div><div class="k">accuracy</div><div class="v small">${Math.round(r.acc)}%</div></div>
+      </div>
+      <div class="chart-box panel"><h3>${esc(label)} · speed over time</h3><canvas id="chart" aria-label="Words per minute each second"></canvas></div>
+      <div class="res-row">
+        ${cell("raw", Math.round(r.raw))}${cell("consistency", Math.round(r.consistency) + "%")}${cell("time", r.t.toFixed(1) + "s")}
+        ${cell("correct / errors", `${r.chars} / ${r.errors}`)}${cell("best combo", r.combo)}${cell("xp", `<span class="xp-gain">+${extra.xp}</span>`)}
+      </div>
+      ${r.failed ? `<p style="grid-column:1/-1;margin:0;color:var(--error);font-weight:800;text-align:center">${esc(r.failed)}</p>` : ""}
+      <div class="res-extra">
+        <div class="panel"><h3>Keys you missed</h3><div class="kbd" id="kbd"></div></div>
+        <div class="panel"><h3>Words to practise</h3><div class="missed-words">${r.missedWords.length ? r.missedWords.map((w) => `<span>${esc(w)}</span>`).join("") : '<em style="color:var(--sub)">Clean run, nothing missed.</em>'}</div></div>
+      </div>
+      <div class="res-actions">
+        <button class="btn primary" id="nextBtn" type="button">Next test <kbd>enter</kbd></button>
+        <button class="btn" id="repeatBtn" type="button">Repeat these words</button>
+        ${r.missedWords.length ? '<button class="btn" id="practiseBtn" type="button">Practise missed words</button>' : ""}
+      </div>
+    </div>`;
+  const kbd = $("#kbd"), max = Math.max(1, ...Object.values(r.missedChars));
+  for (const row of ROWS) {
+    const d = el("div", { class: "row" });
+    for (const k of row) {
+      const n = r.missedChars[k] || 0, key = el("span", { class: "k" }, k);
+      if (n) { key.dataset.n = n; key.style.background = `color-mix(in srgb, var(--error) ${20 + 60 * n / max}%, var(--bg))`; key.style.color = "var(--text)"; }
+      d.appendChild(key);
+    }
+    kbd.appendChild(d);
+  }
+  drawChart($("#chart"), r.chart);
+  $("#nextBtn").onclick = () => Game.restart();
+  $("#repeatBtn").onclick = () => Game.start(Object.assign({}, r.cfg, { words: r.cfg.wordsUsed }));
+  if ($("#practiseBtn")) $("#practiseBtn").onclick = () => {
+    const words = []; for (let i = 0; i < 30; i++) words.push(r.missedWords[i % r.missedWords.length]);
+    Game.start({ kind: "words", words: words.sort(() => Math.random() - .5), label: "practice · missed words", pbKey: "practice" });
+  };
+  inputHandler = { char(ch) { if (ch === " ") return; }, back() {}, enter() { Game.restart(); } };
+  setTimeout(() => $("#nextBtn") && $("#nextBtn").focus(), 50);
+}
+const cell = (k, v) => `<div class="cell"><div class="k">${k}</div><div class="v">${v}</div></div>`;
+function drawChart(cv, data) {
+  const w = cv.parentElement.clientWidth - 28, h = 190, dpr = Math.min(devicePixelRatio || 1, 2);
+  cv.width = w * dpr; cv.height = h * dpr; cv.style.height = h + "px";
+  const c = cv.getContext("2d"); c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const L = 34, R = 26, T = 10, B = 24, sub = css("--sub"), main = css("--main"), err = css("--error"), grid = css("--surface-2");
+  if (!data.length) return;
+  const maxY = Math.max(10, ...data.map((d) => Math.max(d.wpm, d.raw))) * 1.1, maxT = data[data.length - 1].t, maxE = Math.max(1, ...data.map((d) => d.err));
+  const X = (t) => L + (data.length === 1 ? (w - L - R) / 2 : ((t - data[0].t) / Math.max(0.001, maxT - data[0].t)) * (w - L - R));
+  const Y = (v) => T + (1 - v / maxY) * (h - T - B);
+  c.font = `11px ${css("--font-type")}`; c.fillStyle = sub; c.textAlign = "right";
+  const rawStep = maxY / 4, mag = 10 ** Math.floor(Math.log10(rawStep)), step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((m) => m >= rawStep);
+  for (let v = 0; v <= maxY; v += step) { c.fillStyle = grid; c.fillRect(L, Math.round(Y(v)), w - L - R, 1); c.fillStyle = sub; c.fillText(v, L - 6, Y(v) + 4); }
+  c.textAlign = "center";
+  const tStep = maxT > 60 ? 15 : maxT > 20 ? 5 : maxT > 8 ? 2 : maxT > 3 ? 1 : 0.5;
+  for (let t = Math.ceil(data[0].t / tStep) * tStep; t <= maxT; t += tStep) c.fillText(t + "s", X(t), h - 6);
+  const line = (key, col, width, fill) => {
+    c.beginPath(); data.forEach((d, i) => (i ? c.lineTo(X(d.t), Y(d[key])) : c.moveTo(X(d.t), Y(d[key]))));
+    if (fill) { c.save(); c.lineTo(X(maxT), Y(0)); c.lineTo(X(data[0].t), Y(0)); c.closePath(); c.globalAlpha = .14; c.fillStyle = col; c.fill(); c.restore(); c.beginPath(); data.forEach((d, i) => (i ? c.lineTo(X(d.t), Y(d[key])) : c.moveTo(X(d.t), Y(d[key])))); }
+    c.strokeStyle = col; c.lineWidth = width; c.lineJoin = "round"; c.stroke();
+  };
+  line("raw", sub, 1.5, false); line("wpm", main, 2.5, true);
+  const lastD = data[data.length - 1]; c.fillStyle = main; c.beginPath(); c.arc(X(lastD.t), Y(lastD.wpm), 4, 0, 7); c.fill();
+  for (const d of data) if (d.err) { const r = 3 + 3 * d.err / maxE; c.fillStyle = err; c.beginPath(); c.arc(X(d.t), T + 6, r, 0, 7); c.fill(); }
+  c.textAlign = "left"; c.fillStyle = main; c.fillText("wpm", L + 6, h - B - 6);
+  c.fillStyle = sub; c.fillText("raw", L + 40, h - B - 6); c.fillStyle = err; c.fillText("● errors", L + 74, h - B - 6);
+}
+
+/* ===================================================================== game controller */
+const Game = {
+  game: "classic", current: null, lastCfg: null,
+  configFor(game) {
+    if (game === "daily") {
+      const key = todayKey(), rng = mulberry(hashStr("typo-arcade" + key));
+      const done = P.daily[key];
+      return { kind: "words", words: pickWords(30, rng, "english", { punct: true, nums: false }), label: `daily · ${key}`, pbKey: "daily-" + key, daily: key,
+        note: done ? `Today's best: ${Math.round(done.wpm)} wpm. Everyone gets the same 30 words today. Streak: ${dailyStreak()} day${dailyStreak() === 1 ? "" : "s"}.` : `Everyone gets the same 30 words today. Streak: ${dailyStreak()} day${dailyStreak() === 1 ? "" : "s"}.` };
+    }
+    if (game === "weak") {
+      const w = weakWords(30);
+      return { kind: "words", words: w.words, label: "weak keys", pbKey: "weak",
+        note: w.keys.length ? `Built around the keys you miss most: ${w.keys.map((k) => `<kbd>${esc(k)}</kbd>`).join(" ")}` : "No misses recorded yet. Finish a few classic tests and this mode will target your weakest keys." };
+    }
+    const m = S.mode, base = `${S.list}${S.punct ? "-p" : ""}${S.nums ? "-n" : ""}`;
+    if (m === "time") return { kind: "time", seconds: S.time, label: `time ${S.time}s · ${S.list}`, pbKey: `time-${S.time}-${base}` };
+    if (m === "words") return { kind: "words", count: S.words, label: `${S.words} words · ${S.list}`, pbKey: `words-${S.words}-${base}` };
+    if (m === "quote") { const q = QUOTES[Math.floor(Math.random() * QUOTES.length)]; return { kind: "quote", words: q.split(" "), label: "quote", pbKey: "quote" }; }
+    if (m === "zen") return { kind: "zen", label: "zen", pbKey: "zen", note: "Type anything. No targets, no errors. Press shift + enter when you're done." };
+    const words = (S.custom || "").trim().split(/\s+/).filter(Boolean);
+    return { kind: "custom", words: words.length ? words : ["add", "your", "own", "text", "in", "settings"], label: "custom text", pbKey: "custom-" + hashStr(S.custom) };
+  },
+  start(cfg) {
+    if (this.current && this.current.destroy) this.current.destroy();
+    UI.renderRail();
+    if (this.game === "rain") { this.current = new WordRain(); return; }
+    cfg = cfg || this.configFor(this.game);
+    this.lastCfg = cfg;
+    this.current = new TypingTest(cfg);
+    cfg.wordsUsed = this.current.targets.slice();
+  },
+  restart() { this.start(); },
+  setGame(g) {
+    this.game = g;
+    document.querySelectorAll("nav.modes button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.game === g)));
+    this.start();
+  },
+  complete(r) {
+    const tooShort = r.t < 2 || r.chars < 5;
+    let pb = false, xp = 0;
+    if (!tooShort) {
+      xp = Math.round(r.chars / 3 * (r.acc / 100) + (r.failed ? 0 : 10));
+      const prev = P.pbs[r.cfg.pbKey];
+      if (!r.failed && r.cfg.kind !== "zen" && (!prev || r.wpm > prev.wpm)) { pb = !!prev || P.tests > 0; P.pbs[r.cfg.pbKey] = { wpm: r.wpm, acc: r.acc, date: Date.now() }; }
+      if (pb) xp += 25;
+      addXp(xp);
+      P.tests++; P.seconds += r.t;
+      for (const [k, n] of Object.entries(r.missedChars)) P.missed[k] = Math.round(((P.missed[k] || 0) * 0.85 + n) * 100) / 100;
+      for (const k of Object.keys(P.missed)) if (!r.missedChars[k]) P.missed[k] = Math.round(P.missed[k] * 0.93 * 100) / 100;
+      P.history.unshift({ d: Date.now(), mode: r.cfg.label, wpm: Math.round(r.wpm), acc: Math.round(r.acc), raw: Math.round(r.raw), t: Math.round(r.t), failed: !!r.failed });
+      P.history = P.history.slice(0, 60);
+      if (r.cfg.daily && !r.failed) { const prev2 = P.daily[r.cfg.daily]; if (!prev2 || r.wpm > prev2.wpm) P.daily[r.cfg.daily] = { wpm: r.wpm, acc: r.acc }; }
+      saveProfile();
+      unlock("first");
+      if (!r.failed) {
+        if (r.wpm >= 40) unlock("w40"); if (r.wpm >= 60) unlock("w60"); if (r.wpm >= 80) unlock("w80"); if (r.wpm >= 100) unlock("w100");
+        if (r.acc >= 100 && r.words >= 25) unlock("acc100");
+        if (r.cfg.kind === "time" && r.cfg.seconds >= 120) unlock("marathon");
+        if (S.difficulty === "master" && r.cfg.kind !== "zen") unlock("master");
+      }
+      if (r.combo >= 50) unlock("combo50");
+      if (dailyStreak() >= 3) unlock("daily3");
+      if (P.tests >= 25) unlock("tests25");
+      if (pb) Confetti.burst();
+    }
+    showResults(r, { pb, xp });
+  },
+};
+function dailyStreak() {
+  let n = 0; const d = new Date();
+  if (!P.daily[todayKey()]) d.setDate(d.getDate() - 1);
+  for (;;) { const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; if (!P.daily[k]) break; n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+
+/* ===================================================================== UI: rail, settings, stats */
+const UI = {
+  open: null,
+  renderRail() {
+    const rail = $("#rail");
+    if (Game.game !== "classic") {
+      const info = { rain: "Arcade mode · type falling words before they hit the ground", daily: "One shared 30-word test per day · come back tomorrow to keep your streak", weak: "Adaptive practice · words built from the letters you miss most" }[Game.game];
+      rail.innerHTML = `<span style="color:var(--sub);font-weight:700">${info}</span>`; return;
+    }
+    const p = (attr, val, label, on) => `<button type="button" class="pill" data-${attr}="${val}" aria-pressed="${on}">${label}</button>`;
+    const sub = S.mode === "time" ? [15, 30, 60, 120].map((v) => p("time", v, v, S.time === v)).join("")
+      : S.mode === "words" ? [10, 25, 50, 100].map((v) => p("words", v, v, S.words === v)).join("")
+      : S.mode === "custom" ? `<button type="button" class="pill" data-edit-custom="1" aria-pressed="false">edit text</button>` : "";
+    rail.innerHTML = `
+      <div class="grp">${p("toggle", "punct", "@ punctuation", S.punct)}${p("toggle", "nums", "# numbers", S.nums)}</div><span class="sep"></span>
+      <div class="grp">${["time", "words", "quote", "zen", "custom"].map((m) => p("mode", m, m, S.mode === m)).join("")}</div>
+      ${sub ? `<span class="sep"></span><div class="grp">${sub}</div>` : ""}<span class="sep"></span>
+      <div class="grp"><label class="sr-only" for="listSel">Word list</label><select id="listSel">
+        <option value="english"${S.list === "english" ? " selected" : ""}>english</option>
+        <option value="hard"${S.list === "hard" ? " selected" : ""}>tricky words</option>
+        <option value="code"${S.list === "code" ? " selected" : ""}>code</option></select></div>`;
+    rail.querySelectorAll("[data-toggle]").forEach((b) => b.onclick = () => { S[b.dataset.toggle] = !S[b.dataset.toggle]; saveSettings(); Game.restart(); });
+    rail.querySelectorAll("[data-mode]").forEach((b) => b.onclick = () => { S.mode = b.dataset.mode; saveSettings(); Game.restart(); });
+    rail.querySelectorAll("[data-time]").forEach((b) => b.onclick = () => { S.time = +b.dataset.time; saveSettings(); Game.restart(); });
+    rail.querySelectorAll("[data-words]").forEach((b) => b.onclick = () => { S.words = +b.dataset.words; saveSettings(); Game.restart(); });
+    const ec = rail.querySelector("[data-edit-custom]"); if (ec) ec.onclick = () => this.openSettings("customText");
+    $("#listSel").onchange = (e) => { S.list = e.target.value; saveSettings(); Game.restart(); };
+  },
+  closeAll() {
+    if (!this.open) return false;
+    document.querySelectorAll(".scrim, .sheet, .modal").forEach((x) => x.remove());
+    const was = this.open; this.open = null;
+    if (was === "settings") Game.restart(); else focusInput();
+    return true;
+  },
+  scrim() { const s = el("div", { class: "scrim" }); s.onclick = () => this.closeAll(); document.body.appendChild(s); },
+  openSettings(focusId) {
+    this.closeAll(); this.open = "settings"; this.scrim();
+    const seg = (key, opts) => `<div class="seg" role="group">${opts.map(([v, l]) => `<button type="button" data-set="${key}" data-val="${v}" aria-pressed="${String(S[key]) === String(v)}">${l}</button>`).join("")}</div>`;
+    const sw = (key) => seg(key, [[false, "off"], [true, "on"]]);
+    const sheet = el("div", { class: "sheet", role: "dialog", "aria-modal": "true", "aria-label": "Settings" });
+    sheet.innerHTML = `
+      <h2>Settings <button class="icon-btn" type="button" id="closeSet" aria-label="Close settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></h2>
+      <div class="set-group"><h3>Look</h3>
+        <div class="themes">${Object.entries(THEMES).map(([k, c]) => `<button type="button" class="theme-chip" data-theme-pick="${k}" aria-pressed="${S.theme === k}"><span class="sw">${c.map((x) => `<i style="background:${x}"></i>`).join("")}</span>${k}</button>`).join("")}</div>
+        <div class="set"><label for="fontSel">Typing font</label><select id="fontSel">${Object.keys(FONTS).map((f) => `<option${S.font === f ? " selected" : ""}>${f}</option>`).join("")}</select></div>
+        <div class="set"><label for="sizeR">Text size</label><input type="range" id="sizeR" min="1.1" max="2.6" step="0.05" value="${S.size}"></div>
+        <div class="set"><span class="lbl">Caret</span>${seg("caret", [["line", "line"], ["block", "block"], ["under", "under"], ["off", "off"]])}</div>
+        <div class="set"><span class="lbl">Smooth caret</span>${sw("smoothCaret")}</div>
+        <div class="set"><span class="lbl">Focus mode<small>Hide the menus while you type</small></span>${sw("focusMode")}</div>
+        <div class="set"><span class="lbl">Live wpm</span>${sw("liveWpm")}</div>
+        <div class="set"><span class="lbl">Live accuracy</span>${sw("liveAcc")}</div>
+      </div>
+      <div class="set-group"><h3>Challenge</h3>
+        <div class="set"><span class="lbl">Difficulty<small>Expert fails on a wrong word, master on a wrong key</small></span>${seg("difficulty", [["normal", "normal"], ["expert", "expert"], ["master", "master"]])}</div>
+        <div class="set"><span class="lbl">Stop on error<small>Can't move on until it's right</small></span>${sw("stopOnError")}</div>
+        <div class="set"><span class="lbl">No backspace</span>${sw("noBackspace")}</div>
+        <div class="set"><span class="lbl">Blind mode<small>Don't show mistakes while typing</small></span>${sw("blind")}</div>
+        <div class="set"><span class="lbl">Ghost racer<small>A second caret runs at a set pace</small></span>${seg("pace", [["off", "off"], ["pb", "my best"], ["custom", "custom"]])}</div>
+        <div class="set"><label for="paceN">Ghost speed (wpm)</label><input type="number" id="paceN" min="10" max="250" value="${S.paceWpm}" style="width:80px"></div>
+      </div>
+      <div class="set-group"><h3>Sound</h3>
+        <div class="set"><span class="lbl">Key sound</span>${seg("sound", [["off", "off"], ["click", "click"], ["pop", "pop"], ["typewriter", "type"], ["melody", "melody"]])}</div>
+        <div class="set"><span class="lbl">Error sound</span>${sw("errorSound")}</div>
+        <div class="set"><label for="volR">Volume</label><input type="range" id="volR" min="0" max="1" step="0.05" value="${S.volume}"></div>
+        <div class="set"><span class="lbl">Confetti on new best</span>${sw("confetti")}</div>
+      </div>
+      <div class="set-group"><h3>Custom text</h3>
+        <label for="customText" class="sr-only">Custom text</label>
+        <textarea id="customText" placeholder="Paste anything to practise">${esc(S.custom)}</textarea>
+        <button class="btn" type="button" id="useCustom">Practise this text</button>
+      </div>
+      <div class="set-group"><h3>Data</h3>
+        <div class="set"><span class="lbl">Progress is saved in this browser only</span><button class="btn" type="button" id="resetData">Reset progress</button></div>
+      </div>`;
+    document.body.appendChild(sheet);
+    $("#closeSet").onclick = () => this.closeAll();
+    sheet.querySelectorAll("[data-set]").forEach((b) => b.onclick = () => {
+      const k = b.dataset.set, v = b.dataset.val; S[k] = v === "true" ? true : v === "false" ? false : v;
+      sheet.querySelectorAll(`[data-set="${k}"]`).forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+      saveSettings(); applyAppearance(); if (k === "sound") Sound.preview();
+    });
+    sheet.querySelectorAll("[data-theme-pick]").forEach((b) => b.onclick = () => {
+      S.theme = b.dataset.themePick; saveSettings(); applyAppearance();
+      sheet.querySelectorAll("[data-theme-pick]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    });
+    $("#fontSel").onchange = (e) => { S.font = e.target.value; saveSettings(); applyAppearance(); };
+    $("#sizeR").oninput = (e) => { S.size = +e.target.value; saveSettings(); applyAppearance(); };
+    $("#volR").oninput = (e) => { S.volume = +e.target.value; saveSettings(); };
+    $("#volR").onchange = () => Sound.preview();
+    $("#paceN").onchange = (e) => { S.paceWpm = Math.max(10, Math.min(250, +e.target.value || 60)); saveSettings(); };
+    $("#customText").oninput = (e) => { S.custom = e.target.value; saveSettings(); };
+    $("#useCustom").onclick = () => { S.mode = "custom"; saveSettings(); Game.game = "classic"; Game.setGame("classic"); this.closeAll(); };
+    const rd = $("#resetData");
+    rd.onclick = () => {
+      if (rd.dataset.armed) { Object.assign(P, { xp: 0, tests: 0, seconds: 0, pbs: {}, history: [], achievements: [], missed: {}, daily: {}, rainBest: 0 }); saveProfile(); updateLevel(); rd.textContent = "Progress reset"; delete rd.dataset.armed; return; }
+      rd.dataset.armed = "1"; rd.textContent = "Click again to confirm"; rd.style.background = "var(--error)"; rd.style.color = "var(--bg)";
+    };
+    (focusId ? $("#" + focusId) : $("#closeSet")).focus();
+  },
+  openStats() {
+    this.closeAll(); this.open = "stats"; this.scrim();
+    const recent = P.history.filter((h) => !h.failed).slice(0, 10);
+    const avg = recent.length ? Math.round(recent.reduce((s, h) => s + h.wpm, 0) / recent.length) : 0;
+    const best = Math.max(0, ...Object.values(P.pbs).map((p) => p.wpm));
+    const mins = Math.round(P.seconds / 60);
+    const m = el("div", { class: "modal", role: "dialog", "aria-modal": "true", "aria-label": "Stats" });
+    m.innerHTML = `
+      <h2>Your arcade card <button class="icon-btn" type="button" id="closeStats" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></h2>
+      <div class="summary">${cell("level", levelOf(P.xp).lv)}${cell("best wpm", Math.round(best))}${cell("avg last 10", avg)}${cell("tests", P.tests)}${cell("time typing", mins + " min")}${cell("daily streak", dailyStreak())}${cell("rain best", P.rainBest)}</div>
+      <div><h3 style="margin:0 0 8px;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--main)">Achievements · ${P.achievements.length}/${ACHIEVEMENTS.length}</h3>
+      <div class="ach-grid">${ACHIEVEMENTS.map((a) => `<div class="ach${P.achievements.includes(a.id) ? " got" : ""}"><span class="ico">${a.ico}</span><div><b>${a.name}</b><small>${a.desc}</small></div></div>`).join("")}</div></div>
+      <div><h3 style="margin:0 0 8px;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--main)">Recent tests</h3>
+      ${P.history.length ? `<div class="table-wrap"><table class="hist"><thead><tr><th>when</th><th>mode</th><th>wpm</th><th>acc</th><th>raw</th><th>time</th></tr></thead><tbody>
+      ${P.history.slice(0, 15).map((h) => `<tr><td>${new Date(h.d).toLocaleDateString(undefined, { month: "short", day: "numeric" })} ${new Date(h.d).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}</td><td>${esc(h.mode)}${h.failed ? " ✗" : ""}</td><td><b>${h.wpm}</b></td><td>${h.acc}%</td><td>${h.raw}</td><td>${h.t}s</td></tr>`).join("")}
+      </tbody></table></div>` : '<p class="empty">No tests yet. Finish one and it shows up here.</p>'}</div>`;
+    document.body.appendChild(m);
+    $("#closeStats").onclick = () => this.closeAll(); $("#closeStats").focus();
+  },
+};
+
+/* ===================================================================== boot */
+document.querySelectorAll("nav.modes button").forEach((b) => b.onclick = () => Game.setGame(b.dataset.game));
+$("#settingsBtn").onclick = () => UI.openSettings();
+$("#statsBtn").onclick = () => UI.openStats();
+window.addEventListener("resize", () => Game.current && Game.current.layout && Game.current.layout());
+if (window.matchMedia) matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", () => applyAppearance());
+applyAppearance(); updateLevel();
+Game.start();
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => Game.current && Game.current.layout && Game.current.layout());
+})();
+</script>
+</body>
+</html>
