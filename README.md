@@ -131,15 +131,7 @@ flowchart LR
 
 </details>
 
-## 🗺️ Roadmap
 
-- [x] Classic, Word Rain, Daily and Weak Keys modes
-- [x] Ghost racer, XP, achievements and themes
-- [ ] Online leaderboard for the Daily challenge
-- [ ] More word lists and languages
-- [ ] Multiplayer races with friends
-
----
 
 <div align="center">
 
