@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="320" viewBox="0 0 1200 320" role="img" aria-label="Typo Arcade: a typing test that plays like an arcade game">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1a1833"/><stop offset="1" stop-color="#2a1d4f"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="78%" cy="30%" r="45%">
+      <stop offset="0" stop-color="#ffb454" stop-opacity=".22"/><stop offset="1" stop-color="#ffb454" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="typed"><rect x="96" y="196" height="60" width="0">
+      <animate attributeName="width" values="0;420;420;0" keyTimes="0;.55;.9;1" dur="6s" repeatCount="indefinite" calcMode="spline" keySplines="0 0 1 1;0 0 1 1;.6 0 .4 1"/>
+    </rect></clipPath>
+    <style>
+      .title { font: 900 64px "Bungee", "Arial Black", Impact, sans-serif; letter-spacing: 1px; }
+      .mono { font: 600 30px "JetBrains Mono", "Fira Code", Consolas, monospace; }
+      .small { font: 700 16px "Nunito", "Segoe UI", Arial, sans-serif; letter-spacing: 3px; }
+      .cap rect { fill: #2f2b5c; stroke: #3d3873; stroke-width: 2; }
+      .cap text { font: 700 22px "JetBrains Mono", Consolas, monospace; fill: #b8b2e6; text-anchor: middle; }
+      .cap { animation: press 2.4s infinite; transform-box: fill-box; transform-origin: center; }
+      .cap.hot rect { fill: #ffb454; stroke: #ffb454; }
+      .cap.hot text { fill: #1a1833; }
+      .c2 { animation-delay: .3s; } .c3 { animation-delay: .6s; } .c4 { animation-delay: .9s; } .c5 { animation-delay: 1.2s; } .c6 { animation-delay: 1.5s; }
+      @keyframes press { 0%, 12%, 100% { transform: translateY(0); } 6% { transform: translateY(5px); } }
+      .caret { animation: blink 1s steps(1) infinite; }
+      @keyframes blink { 50% { opacity: 0; } }
+      .drop { animation: fall 5s linear infinite; }
+      .d2 { animation-delay: -1.7s; } .d3 { animation-delay: -3.3s; }
+      @keyframes fall { from { transform: translateY(-60px); opacity: 0; } 10% { opacity: 1; } 85% { opacity: 1; } to { transform: translateY(330px); opacity: 0; } }
+      .flame { animation: flick .5s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: bottom; }
+      @keyframes flick { to { transform: scale(1.12, .92); } }
+      @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+    </style>
+  </defs>
+
+  <rect width="1200" height="320" rx="24" fill="url(#bg)"/>
+  <rect width="1200" height="320" rx="24" fill="url(#glow)"/>
+
+  <!-- falling words (Word Rain) -->
+  <g class="mono" fill="#6f69a6" opacity=".55" style="font-size:20px">
+    <text class="drop" x="880" y="0">rhythm</text>
+    <text class="drop d2" x="1010" y="0">galaxy</text>
+    <text class="drop d3" x="945" y="0">zephyr</text>
+  </g>
+
+  <!-- logo -->
+  <g transform="translate(96 62) rotate(-6)">
+    <rect width="62" height="62" rx="14" fill="#c98a3b"/>
+    <rect width="62" height="56" rx="14" fill="#ffb454"/>
+    <text x="31" y="42" text-anchor="middle" style="font: 400 34px 'Bungee', 'Arial Black', sans-serif" fill="#1a1833">T</text>
+  </g>
+  <text x="180" y="118" class="title" fill="#f3eefe">TYPO<tspan fill="#ffb454">ARCADE</tspan></text>
+  <text x="182" y="152" class="small" fill="#8f89c4">TYPE FAST · BLAST WORDS · LEVEL UP</text>
+
+  <!-- typed line -->
+  <text x="96" y="240" class="mono" fill="#6f69a6">practice makes progress</text>
+  <g clip-path="url(#typed)"><text x="96" y="240" class="mono" fill="#f3eefe">practice makes progress</text></g>
+  <rect class="caret" x="96" y="212" width="3" height="34" rx="1.5" fill="#ffb454">
+    <animate attributeName="x" values="96;512;512;96" keyTimes="0;.55;.9;1" dur="6s" repeatCount="indefinite" calcMode="spline" keySplines="0 0 1 1;0 0 1 1;.6 0 .4 1"/>
+  </rect>
+
+  <!-- stats chips -->
+  <g style="font: 800 18px 'Nunito', 'Segoe UI', Arial, sans-serif">
+    <rect x="96" y="268" width="118" height="32" rx="9" fill="#24214a"/>
+    <text x="112" y="290" fill="#ffb454">112 <tspan fill="#8f89c4">wpm</tspan></text>
+    <rect x="224" y="268" width="118" height="32" rx="9" fill="#24214a"/>
+    <text x="240" y="290" fill="#6ee7c8">99% <tspan fill="#8f89c4">acc</tspan></text>
+    <rect x="352" y="268" width="104" height="32" rx="9" fill="#24214a"/>
+    <text class="flame" x="366" y="291" style="font-size:18px">🔥</text>
+    <text x="394" y="290" fill="#f3eefe">x24</text>
+  </g>
+
+  <!-- keycaps -->
+  <g transform="translate(760 205)">
+    <g class="cap"><rect width="54" height="54" rx="10"/><text x="27" y="35">T</text></g>
+    <g transform="translate(62 0)"><g class="cap c2 hot"><rect width="54" height="54" rx="10"/><text x="27" y="35">Y</text></g></g>
+    <g transform="translate(124 0)"><g class="cap c3"><rect width="54" height="54" rx="10"/><text x="27" y="35">P</text></g></g>
+    <g transform="translate(186 0)"><g class="cap c4"><rect width="54" height="54" rx="10"/><text x="27" y="35">O</text></g></g>
+    <g transform="translate(248 0)"><g class="cap c5 hot"><rect width="54" height="54" rx="10"/><text x="27" y="35">!</text></g></g>
+    <g transform="translate(93 62)"><g class="cap c6"><rect width="148" height="40" rx="10"/><text x="74" y="27" style="font-size:16px">space</text></g></g>
+  </g>
+</svg>

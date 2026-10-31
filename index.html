@@ -817,7 +817,10 @@ class TypingTest {
     this.done = true; clearInterval(this.timer); cancelAnimationFrame(this.raf);
     document.body.classList.remove("typing");
     const t = Math.max(0.5, this.cfg.kind === "time" && !this.failed ? this.cfg.seconds : (performance.now() - this.t0) / 1000);
-    if (this.secKeys || this.secs.length === 0) this.secs.push({ t: Math.round(t * 10) / 10, raw: this.secKeys * 60 / Math.max(0.2, t - this.secs.length), err: this.secErr, wpm: this.netWpm(t) });
+    // close the last partial second: a short tail is merged into the previous second
+    const rem = t - this.secs.length;
+    if (this.secs.length === 0 || (this.secKeys && rem >= 0.5)) this.secs.push({ t: Math.round(t * 10) / 10, raw: this.secKeys * 12 / Math.max(0.5, rem), err: this.secErr, wpm: this.netWpm(t) });
+    else if (this.secs.length) { const last = this.secs[this.secs.length - 1]; last.err += this.secErr; last.wpm = this.netWpm(t); }
     const wpm = this.zen ? (this.goodKeys / 5) / (t / 60) : (this.correctChars(true) / 5) / (t / 60);
     const raw = (this.keys / 5) / (t / 60);
     const acc = this.keys ? (100 * this.goodKeys / this.keys) : 0;
